@@ -3,6 +3,8 @@ name: CLI Release
 on:
   workflow_dispatch:
   push:
+    branches:
+      - ci/windows-arm64-release # Fork-only validation trigger; remove before upstreaming.
     tags:
       - "v*.*.*"
 
@@ -35,6 +37,7 @@ jobs:
 
   build:
     strategy:
+      fail-fast: false # Fork-only validation; remove before upstreaming.
       matrix:
         include:
           - name: linux-amd64-gnu
@@ -127,11 +130,11 @@ jobs:
             cross: false
             experimental: false
 
-          #- name: windows-arm64
-          #  os: windows-latest
-          #  target: aarch64-pc-windows-msvc
-          #  cross: true
-          #  experimental: true
+          - name: windows-arm64
+            os: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            cross: false
+            experimental: false
 
     name: Binaries for ${{ matrix.name }}
     needs: info
@@ -255,6 +258,7 @@ jobs:
             watchexec-*.zip
 
   upload:
+    if: startsWith(github.ref, 'refs/tags/')
     needs: [build, info]
 
     name: Checksum and publish
